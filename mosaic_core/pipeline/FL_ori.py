@@ -84,20 +84,19 @@ class OneTeacher:
                 self.netS.parameters(), lr=config.DIS_LR, betas=(0.9, 0.999), weight_decay=config.DIS_WD)
         
         # TODO 去除学习率衰减
-        # self.sched_s = optim.lr_scheduler.CosineAnnealingLR(
-        #     self.optim_s, steps_all)  # TODO, eta_min=config.DIS_LR_MIN,
+        self.sched_s = optim.lr_scheduler.CosineAnnealingLR(
+            self.optim_s, steps_all)  # TODO, eta_min=config.DIS_LR_MIN,
         # for gen
         self.optim_g = torch.optim.Adam(self.netG.parameters(), lr=config.GEN_LR, betas=[0.5, 0.999])
 
         # TODO 去除generator学习率衰减
-        # self.sched_g = torch.optim.lr_scheduler.CosineAnnealingLR(self.optim_g, T_max=steps_all)
+        self.sched_g = torch.optim.lr_scheduler.CosineAnnealingLR(self.optim_g, T_max=steps_all)
         param_ds = []
         for n in range(config.N_PARTIES):
             param_ds += list(self.netDS[n].parameters())
         self.optim_d = torch.optim.Adam(param_ds, lr=config.GEN_LR, betas=[0.5, 0.999])
         
-        # TODO 去除discriminator学习率衰减
-        # self.sched_d = torch.optim.lr_scheduler.CosineAnnealingLR(self.optim_d, T_max=steps_all)
+        self.sched_d = torch.optim.lr_scheduler.CosineAnnealingLR(self.optim_d, T_max=steps_all)
         ##TODO: not all complete steps_all if local_percetnt<1
 
         # criterion
@@ -175,10 +174,10 @@ class OneTeacher:
                     self.args.start_epoch = checkpoint['epoch']
                     self.bestacc = checkpoint['best_acc']
                     self.optim_g.load_state_dict(checkpoint['optim_g'])
-                    # self.sched_g.load_state_dict(checkpoint['sched_g'])
+                    self.sched_g.load_state_dict(checkpoint['sched_g'])
                     self.optim_s.load_state_dict(checkpoint['optim_s'])
-                    # self.sched_s.load_state_dict(checkpoint['sched_s'])
-                    # self.sched_d.load_state_dict(checkpoint['sched_d'])
+                    self.sched_s.load_state_dict(checkpoint['sched_s'])
+                    self.sched_d.load_state_dict(checkpoint['sched_d'])
                     self.optim_d.load_state_dict(checkpoint['optim_d'])
                 except:
                     print("Fails to load additional model information")
@@ -209,9 +208,9 @@ class OneTeacher:
             # 2. Distill, update S
             self.update_netS_batch(selectN)
 
-            # self.sched_d.step()
-            # self.sched_g.step()
-            # self.sched_s.step()
+            self.sched_d.step()
+            self.sched_g.step()
+            self.sched_s.step()
             # val
         acc = validate(self.optim_s.param_groups[0]['lr'], self.val_loader,
                        self.netS, self.criterion, self.args,
@@ -250,9 +249,9 @@ class OneTeacher:
             "optim_s": self.optim_s.state_dict(),
             "optim_g": self.optim_g.state_dict(),
             "optim_d": self.optim_d.state_dict(),
-            # "sched_d": self.sched_d.state_dict(),
-            # "sched_s": self.sched_s.state_dict(),
-            # "sched_g": self.sched_g.state_dict()
+            "sched_d": self.sched_d.state_dict(),
+            "sched_s": self.sched_s.state_dict(),
+            "sched_g": self.sched_g.state_dict()
         }
         save_checkpoint(checkpoints,
                         is_best,
@@ -404,8 +403,6 @@ class OneTeacher:
 
 
 def save_checkpoint(state, is_best, save_dir, filename='checkpoint.pth'):
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
     if is_best:
         torch.save(state, os.path.join(save_dir, filename))
         print(f'[saved] ckpt saved to {os.path.join(save_dir, filename)}')

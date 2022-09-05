@@ -6,5 +6,5 @@
     ```bash
     python kd_mosaic.py --lr 0.1 --batch-size 256 --teacher wrn40_2 --student wrn16_1 --dataset cifar10 --unlabeled cifar10 --epoch 200 --lr 0.1 --local 1 --align 1 --adv 1 --balance 10 --gpu 0 --pipeline=multi_teacher
 
-    python kd_mosaic.py --gpu 0 --pipeline=multi_teacher --teacher wrn40_2 --student wrn16_1 --dataset cifar10 --unlabeled cifar10 --epochs 300 --ckpt_path /root/autodl-tmp/checkpoints/wrn16_1/0828_e300_n20_db128/ --fp16 --logfile wrn300_128 --resume /root/autodl-tmp/checkpoints/wrn16_1/0828_e300_n20_db128/latest.pth
+    python kd_mosaic.py --gpu 0 --pipeline=multi_teacher --teacher wrn40_2 --student resnet8 --dataset cifar10 --unlabeled cifar10 --epochs 400 --ckpt_path /home/lsl/Research/DFFK2-main/mosaic_core/checkpoints/resnet8/fixLr0.1_400e_n20_b128 --fp16 --logfile fixlr0.1
     ```
